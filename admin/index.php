@@ -1,3 +1,50 @@
+<?php
+session_start();
+include '../koneksi.php';
+
+// 1. Ambil data untuk opsi dropdown filter
+$query_status      = mysqli_query($koneksi, "SELECT * FROM status_barang");
+$query_penyimpanan = mysqli_query($koneksi, "SELECT * FROM penyimpanan");
+$query_vendor      = mysqli_query($koneksi, "SELECT * FROM vendor");
+
+// 2. Tangkap data filter dari URL jika ada (Metode GET)
+$search             = isset($_GET['search']) ? mysqli_real_escape_string($koneksi, $_GET['search']) : '';
+$filter_status      = isset($_GET['status_id']) ? mysqli_real_escape_string($koneksi, $_GET['status_id']) : '';
+$filter_penyimpanan = isset($_GET['penyimpanan_id']) ? mysqli_real_escape_string($koneksi, $_GET['penyimpanan_id']) : '';
+$filter_vendor      = isset($_GET['vendor_id']) ? mysqli_real_escape_string($koneksi, $_GET['vendor_id']) : '';
+
+// 3. Menyusun query filter dinamis
+$where_clauses = [];
+if (!empty($search)) {
+    $where_clauses[] = "barang.nama_barang LIKE '%$search%'";
+}
+if (!empty($filter_status)) {
+    $where_clauses[] = "barang.status_id = '$filter_status'";
+}
+if (!empty($filter_penyimpanan)) {
+    $where_clauses[] = "barang.penyimpanan_id = '$filter_penyimpanan'";
+}
+if (!empty($filter_vendor)) {
+    $where_clauses[] = "barang.vendor_id = '$filter_vendor'";
+}
+
+$where_sql = "";
+if (count($where_clauses) > 0) {
+    $where_sql = " WHERE " . implode(" AND ", $where_clauses);
+}
+
+// 4. Query utama dengan penyesuaian kolom vendor.id_vendor dan barang.vendor_id
+$query_string = "SELECT barang.*, 
+                        status_barang.nama_status, 
+                        penyimpanan.nama_penyimpanan, 
+                        vendor.nama_vendor 
+                 FROM barang 
+                 LEFT JOIN status_barang ON barang.status_id = status_barang.id
+                 LEFT JOIN penyimpanan ON barang.penyimpanan_id = penyimpanan.id
+                 LEFT JOIN vendor ON barang.vendor_id = vendor.id_vendor" . $where_sql;
+
+$data = mysqli_query($koneksi, $query_string);
+?>
    <!doctype html>
    <html lang="en">
    <!--begin::Head-->
@@ -178,17 +225,36 @@
                                </a>
                                <ul class="nav nav-treeview">
                                    <li class="nav-item">
-                                       <a href="./index.html" class="nav-link active">
+                                       <a href="Status.php" class="nav-link active">
                                            <i class="nav-icon bi bi-circle"></i>
-                                           <p>Dashboard v1</p>
+                                           <p>Status Produk</p>
                                        </a>
                                    </li>
                                    <li class="nav-item">
-                                       <a href="./index2.html" class="nav-link">
+                                       <a href="penyimpanan.php" class="nav-link">
                                            <i class="nav-icon bi bi-circle"></i>
-                                           <p>Dashboard v2</p>
+                                           <p>Penyimpanan Produk</p>
                                        </a>
                                    </li>
+                                   <li class="nav-item">
+                                       <a href="stok.php" class="nav-link">
+                                           <i class="nav-icon bi bi-circle"></i>
+                                           <p>Stok</p>
+                                       </a>
+                                   </li>
+                                   <li class="nav-item">
+                                       <a href="distribusi.php" class="nav-link">
+                                           <i class="nav-icon bi bi-circle"></i>
+                                           <p>Distribusi</p>
+                                       </a>
+                                   </li>
+                                   <li class="nav-item">
+                                       <a href="vendor.php" class="nav-link">
+                                           <i class="nav-icon bi bi-circle"></i>
+                                           <p>Vendor</p>
+                                       </a>
+                                   </li>
+                                   
                                    <li class="nav-item">
                                        <a href="logout.php" class="nav-link">
                                            <i class="nav-icon bi bi-circle"></i>
@@ -336,6 +402,108 @@
                        <!-- /.direct-chat-pane -->
                    </div>
                </div>
+
+               <!--awal-->
+               <div class="px-4">
+    <div class="card-body">
+        
+        <!-- SECTION FILTER DIATAS TABEL -->
+        <form method="GET" action="" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Cari nama barang..." value="<?= htmlspecialchars($search); ?>">
+            </div>
+            <div class="col-md-3">
+                <select name="status_id" class="form-control">
+                    <option value="">-- Semua Status --</option>
+                    <?php while($st = mysqli_fetch_assoc($query_status)) { ?>
+                        <option value="<?= $st['id']; ?>" <?= $filter_status == $st['id'] ? 'selected' : ''; ?>>
+                            <?= $st['nama_status']; ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="vendor_id" class="form-control">
+                    <option value="">-- Semua Vendor --</option>
+                    <?php while($vd = mysqli_fetch_assoc($query_vendor)) { ?>
+                        <option value="<?= $vd['id_vendor']; ?>" <?= $filter_vendor == $vd['id_vendor'] ? 'selected' : ''; ?>>
+                            <?= $vd['nama_vendor']; ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+
+        <!-- DATA TABEL BARANG -->
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>No</th>
+                    <th>Nama Barang</th>
+                    <th>Vendor</th>
+                    <th>Status</th>
+                    <th>Penyimpanan</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Limit Stok</th>
+                    <?php if ($_SESSION['role'] == 'admin') { ?>
+                        <th>Aksi</th>
+                    <?php } ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $no = 1;
+                while ($row = mysqli_fetch_assoc($data)) {
+                    // Logika pewarnaan jika stok kritis menyentuh/kurang dari limit
+                    $stok_kritis = ($row['stok'] <= $row['limit_stok']);
+                ?>
+                    <tr>
+                        <td><?= $no++; ?></td>
+                        <td><strong><?= htmlspecialchars($row['nama_barang']); ?></strong></td>
+                        <td><?= htmlspecialchars($row['nama_vendor'] ?? 'Belum Set'); ?></td>
+                        <td>
+                            <!-- Antisipasi data lama seperti 'aktif' agar tidak merusak tampilan text layout -->
+                            <?= htmlspecialchars($row['nama_status'] ?? $row['status_id']); ?>
+                        </td>
+                        <td>
+                            <!-- Antisipasi data lama seperti 'gudang A' agar aman dari blank data -->
+                            <?= htmlspecialchars($row['nama_penyimpanan'] ?? $row['penyimpanan_id']); ?>
+                        </td>
+                        <td>Rp <?= number_format($row['harga_barang'], 0, ',', '.'); ?></td>
+                        <td>
+                            <?php if ($stok_kritis) { ?>
+                                <span class="badge bg-danger">Sisa: <?= $row['stok']; ?></span>
+                            <?php } else { ?>
+                                <span class="badge bg-success"><?= $row['stok']; ?></span>
+                            <?php } ?>
+                        </td>
+                        <td><span class="text-muted"><?= $row['limit_stok']; ?></span></td>
+
+                        <?php if ($_SESSION['role'] == 'admin') { ?>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="edit_barang.php?id=<?= $row['id']; ?>" class="btn btn-warning btn-sm">
+                                        Edit
+                                    </a>
+                                    <a href="hapus_barang.php?id=<?= $row['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Hapus data?')">
+                                        Hapus
+                                    </a>
+                                </div>
+                            </td>
+                        <?php } ?>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+
        </div>
        </div>
        </div>
