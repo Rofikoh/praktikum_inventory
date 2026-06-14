@@ -71,6 +71,47 @@ $total_users = $data_users['total_users'];
 $query_distribusi = mysqli_query($koneksi, "SELECT COUNT(*) AS total_distribusi FROM distribusi");
 $data_distribusi  = mysqli_fetch_assoc($query_distribusi);
 $total_distribusi = $data_distribusi['total_distribusi'];
+// 1. PROSES TAMBAH DATA
+if (isset($_POST['tambah'])) {
+    $nama = mysqli_real_escape_string($koneksi, $_POST['nama_penyimpanan']);
+    $lokasi = mysqli_real_escape_string($koneksi, $_POST['lokasi']);
+    
+    $query = "INSERT INTO penyimpanan (nama_penyimpanan, lokasi) VALUES ('$nama', '$lokasi')";
+    if (mysqli_query($koneksi, $query)) {
+        header("Location: penyimpanan.php?status=sukses");
+    }
+}
+
+// 2. PROSES EDIT DATA
+if (isset($_POST['ubah'])) {
+    $id = $_POST['id'];
+    $nama = mysqli_real_escape_string($koneksi, $_POST['nama_penyimpanan']);
+    $lokasi = mysqli_real_escape_string($koneksi, $_POST['lokasi']);
+    
+    $query = "UPDATE penyimpanan SET nama_penyimpanan='$nama', lokasi='$lokasi' WHERE id='$id'";
+    if (mysqli_query($koneksi, $query)) {
+        header("Location: penyimpanan.php?status=sukses");
+    }
+}
+
+// 3. PROSES HAPUS DATA
+if (isset($_GET['hapus'])) {
+    $id = $_GET['hapus'];
+    mysqli_query($koneksi, "DELETE FROM penyimpanan WHERE id='$id'");
+    header("Location: penyimpanan.php");
+}
+
+// 4. AMBIL DATA UNTUK TOMBOL EDIT
+$edit_data = null;
+if (isset($_GET['edit'])) {
+    $id_edit = $_GET['edit'];
+    $res = mysqli_query($koneksi, "SELECT * FROM penyimpanan WHERE id='$id_edit'");
+    $edit_data = mysqli_fetch_assoc($res);
+}
+
+// AMBIL SEMUA DATA UNTUK TABEL
+$tampil = mysqli_query($koneksi, "SELECT * FROM penyimpanan ORDER BY id DESC");
+
 ?>
    <!doctype html>
    <html lang="en">
@@ -335,207 +376,65 @@ $total_distribusi = $data_distribusi['total_distribusi'];
                             <!--end::Small Box Widget 1-->
                         </div>
                         <!--end::Col-->
-                        <div class="app-content">
-                            <div class="container-fluid">
-                                <div class="row">
-
-                                    <div class="col-lg-3 col-6">
-                                        <div class="small-box text-bg-primary">
-                                            <div class="inner">
-                                                <h3><?php echo $total_barang; ?></h3>
-                                                <p>Total Produk</p>
-                                            </div>
-                                            <svg class="small-box-icon" fill="currentColor" viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path
-                                                    d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z">
-                                                </path>
-                                            </svg>
-                                            <a href="barang.php"
-                                                class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                                                Lihat Produk <i class="bi bi-link-45deg"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-3 col-6">
-                                        <div class="small-box text-bg-success">
-                                            <div class="inner">
-                                                <h3><?php echo $bounce_rate_persen; ?><sup class="fs-5">%</sup></h3>
-                                                <p>Stok Perlu Restok</p>
-                                            </div>
-                                            <svg class="small-box-icon" fill="currentColor" viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path
-                                                    d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z">
-                                                </path>
-                                            </svg>
-                                            <a href="restok.php"
-                                                class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                                                Cek Limit Stok <i class="bi bi-link-45deg"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-3 col-6">
-                                        <div class="small-box text-bg-warning">
-                                            <div class="inner">
-                                                <h3><?php echo $total_users; ?></h3>
-                                                <p>User Terdaftar</p>
-                                            </div>
-                                            <svg class="small-box-icon" fill="currentColor" viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path
-                                                    d="M6.25 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM3.25 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM19.75 7.5a.75.75 0 00-1.5 0v2.25H16a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25H22a.75.75 0 000-1.5h-2.25V7.5z">
-                                                </path>
-                                            </svg>
-                                            <a href="users.php"
-                                                class="small-box-footer link-dark link-underline-opacity-0 link-underline-opacity-50-hover">
-                                                Kelola User <i class="bi bi-link-45deg"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-3 col-6">
-                                        <div class="small-box text-bg-danger">
-                                            <div class="inner">
-                                                <h3><?php echo $total_distribusi; ?></h3>
-                                                <p>Log Distribusi</p>
-                                            </div>
-                                            <svg class="small-box-icon" fill="currentColor" viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path clip-rule="evenodd" fill-rule="evenodd"
-                                                    d="M2.25 13.5a8.25 8.25 0 018.25-8.25.75.75 0 01.75.75v6.75H18a.75.75 0 01.75.75 8.25 8.25 0 01-16.5 0z">
-                                                </path>
-                                                <path clip-rule="evenodd" fill-rule="evenodd"
-                                                    d="M12.75 3a.75.75 0 01.75-.75 8.25 8.25 0 018.25 8.25.75.75 0 01-.75.75h-7.5a.75.75 0 01-.75-.75V3z">
-                                                </path>
-                                            </svg>
-                                            <a href="distribusi.php"
-                                                class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                                                Lihat Riwayat <i class="bi bi-link-45deg"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Col-->
-                           <!--end::Col-->
-
-                           <!-- /.contacts-list-info -->
-                           </a>
-                           </li>
-                           <!-- End Contact Item -->
-                           </ul>
-                           <!-- /.contacts-list -->
-                       </div>
-                       <!-- /.direct-chat-pane -->
-                   </div>
-               </div>
-
-               <!--awal-->
-               <div class="px-4">
-    <div class="card-body">
-        
-        <!-- SECTION FILTER DIATAS TABEL -->
-        <form method="GET" action="" class="row g-3 mb-4">
-            <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Cari nama barang..." value="<?= htmlspecialchars($search); ?>">
-            </div>
-            <div class="col-md-3">
-                <select name="status_id" class="form-control">
-                    <option value="">-- Semua Status --</option>
-                    <?php while($st = mysqli_fetch_assoc($query_status)) { ?>
-                        <option value="<?= $st['id']; ?>" <?= $filter_status == $st['id'] ? 'selected' : ''; ?>>
-                            <?= $st['nama_status']; ?>
-                        </option>
+                   <body class="bg-light p-4">
+<div class="container bg-white p-4 rounded shadow-sm">
+    <h3 class="mb-4">📦 Manajemen Lokasi Penyimpanan</h3>
+    
+    <div class="row">
+        <!-- FORM INPUT (TAMBAH / EDIT) -->
+        <div class="col-md-4 mb-4">
+            <div class="card p-3 shadow-sm">
+                <h5><?= $edit_data ? 'Edit Lokasi' : 'Tambah Lokasi Baru' ?></h5>
+                <form method="POST" action="">
+                    <?php if ($edit_data) { ?>
+                        <input type="hidden" name="id" value="<?= $edit_data['id']; ?>">
                     <?php } ?>
-                </select>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Nama Penyimpanan / Gudang</label>
+                        <input type="text" name="nama_penyimpanan" class="form-control" required value="<?= $edit_data ? $edit_data['nama_penyimpanan'] : ''; ?>" placeholder="Contoh: Gudang Utama A">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Detail Lokasi (Keterangan)</label>
+                        <input type="text" name="lokasi" class="form-control" value="<?= $edit_data ? $edit_data['lokasi'] : ''; ?>" placeholder="Contoh: Blok B Lantai 2">
+                    </div>
+                    
+                    <button type="submit" name="<?= $edit_data ? 'ubah' : 'tambah' ?>" class="btn <?= $edit_data ? 'btn-warning' : 'btn-primary' ?> w-100">
+                        <?= $edit_data ? 'Simpan Perubahan' : 'Tambah Data' ?>
+                    </button>
+                    <?php if ($edit_data) { echo '<a href="penyimpanan.php" class="btn btn-secondary w-100 mt-2">Batal</a>'; } ?>
+                </form>
             </div>
-            <div class="col-md-3">
-                <select name="vendor_id" class="form-control">
-                    <option value="">-- Semua Vendor --</option>
-                    <?php while($vd = mysqli_fetch_assoc($query_vendor)) { ?>
-                        <option value="<?= $vd['id_vendor']; ?>" <?= $filter_vendor == $vd['id_vendor'] ? 'selected' : ''; ?>>
-                            <?= $vd['nama_vendor']; ?>
-                        </option>
-                    <?php } ?>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
-            </div>
-        </form>
+        </div>
 
-        <!-- DATA TABEL BARANG -->
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>No</th>
-                    <th>Nama Barang</th>
-                    <th>Vendor</th>
-                    <th>Status</th>
-                    <th>Penyimpanan</th>
-                    <th>Harga</th>
-                    <th>Stok</th>
-                    <th>Limit Stok</th>
-                    <?php if ($_SESSION['role'] == 'admin') { ?>
-                        <th>Aksi</th>
-                    <?php } ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $no = 1;
-                while ($row = mysqli_fetch_assoc($data)) {
-                    // Logika pewarnaan jika stok kritis menyentuh/kurang dari limit
-                    $stok_kritis = ($row['stok'] <= $row['limit_stok']);
-                ?>
+        <!-- TABEL DATA -->
+        <div class="col-md-8">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
                     <tr>
-                        <td><?= $no++; ?></td>
-                        <td><strong><?= htmlspecialchars($row['nama_barang']); ?></strong></td>
-                        <td><?= htmlspecialchars($row['nama_vendor'] ?? 'Belum Set'); ?></td>
-                        <td>
-                            <!-- Antisipasi data lama seperti 'aktif' agar tidak merusak tampilan text layout -->
-                            <?= htmlspecialchars($row['nama_status'] ?? $row['status_id']); ?>
-                        </td>
-                        <td>
-                            <!-- Antisipasi data lama seperti 'gudang A' agar aman dari blank data -->
-                            <?= htmlspecialchars($row['nama_penyimpanan'] ?? $row['penyimpanan_id']); ?>
-                        </td>
-                        <td>Rp <?= number_format($row['harga_barang'], 0, ',', '.'); ?></td>
-                        <td>
-                            <?php if ($stok_kritis) { ?>
-                                <span class="badge bg-danger">Sisa: <?= $row['stok']; ?></span>
-                            <?php } else { ?>
-                                <span class="badge bg-success"><?= $row['stok']; ?></span>
-                            <?php } ?>
-                        </td>
-                        <td><span class="text-muted"><?= $row['limit_stok']; ?></span></td>
-
-                        <?php if ($_SESSION['role'] == 'admin') { ?>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a href="edit_barang.php?id=<?= $row['id']; ?>" class="btn btn-warning btn-sm">
-                                        Edit
-                                    </a>
-                                    <a href="hapus_barang.php?id=<?= $row['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Hapus data?')">
-                                        Hapus
-                                    </a>
-                                </div>
-                            </td>
-                        <?php } ?>
+                        <th>ID</th>
+                        <th>Nama Penyimpanan</th>
+                        <th>Keterangan Lokasi</th>
+                        <th>Aksi</th>
                     </tr>
-                <?php } ?>
-            </tbody>
-        </table>
-
+                </thead>
+                <tbody>
+                    <?php while ($row = mysqli_fetch_assoc($tampil)) { ?>
+                    <tr>
+                        <td><?= $row['id']; ?></td>
+                        <td><strong><?= htmlspecialchars($row['nama_penyimpanan']); ?></strong></td>
+                        <td><?= htmlspecialchars($row['lokasi']); ?></td>
+                        <td>
+                            <a href="penyimpanan.php?edit=<?= $row['id']; ?>" class="btn btn-sm btn-info text-white">Edit</a>
+                            <a href="penyimpanan.php?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus lokasi ini?')">Hapus</a>
+                        </td>
+                    </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-
-
+</div>     
        </div>
        </div>
        </div>
