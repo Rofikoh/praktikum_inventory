@@ -31,5 +31,6 @@ Gambar 1.6 TAMPILAN TAMBAH DATA
 <img width="922" height="404" alt="image" src="https://github.com/user-attachments/assets/2fbdca85-1277-4def-8988-b661a8beb5ca" />
 
 Link GITHUB : https://github.com/Rofikoh/praktikum_inventory.git
+
 Link Presentasi :
 # praktikum_inventory
