@@ -21,7 +21,9 @@ LOGO PERUSAHAAN
 <img width="468" height="350" alt="image" src="https://github.com/user-attachments/assets/b24eea2e-8171-4923-8bfd-cec0f83755bd" />
 
 
+
 TAMPILAN INVENTORY WEBSITE
+
 
 
 Gambar 1. 1 LOGIN
